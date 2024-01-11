@@ -152,6 +152,10 @@ class Variable:
     def __sub__(self, other):
         return sub(self, other)
 
+    def __truediv__(self, other):
+        """真除法"""
+        return div(self, other)
+
 
 class Add(Function):
     """y = x0 + x1"""
@@ -170,6 +174,8 @@ def add(x0, x1):
 
 
 class Sub(Function):
+    """y = x0 - x1"""
+
     def forward(self, x0, x1):
         return x0 - x1
 
@@ -199,8 +205,26 @@ def mul(x0, x1):
 
 
 def numerical_diff(f, x, eps=1e-4):
+    """数值微分"""
     x0 = Variable(as_ndarray(x.data - eps))
     x1 = Variable(as_ndarray(x.data + eps))
     y0 = f(x0)
     y1 = f(x1)
     return (y1.data - y0.data) / (2 * eps)
+
+
+class Div(Function):
+    """ y = x0 / x1"""
+
+    def forward(self, x0, x1):
+        return x0 / x1
+
+    def backward(self, gy):
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        gx0 = gy / x1
+        gx1 = - gy * x0 / (x1 ** 2)
+        return gx0, gx1
+
+
+def div(x0, x1):
+    return Div()(x0, x1)

@@ -56,10 +56,8 @@ class Function:
             self.generation = max([x.generation for x in inputs])  # 函数的辈分等于输入的辈分中的最大值
             for output in outputs:
                 output.set_creator(self)  # 记录output的创建者
-
-        self.inputs = inputs  # 记录输入值，方便backward()
-
-        self.outputs = [weakref.ref(output) for output in outputs]  # 弱引用, 使用output()访问实际数据
+            self.inputs = inputs  # 记录输入值，方便backward()
+            self.outputs = [weakref.ref(output) for output in outputs]  # 弱引用, 使用output()访问实际数据
 
         return outputs if len(outputs) > 1 else outputs[0]  # 返回一个或多个
 
@@ -96,10 +94,10 @@ class Variable:
         x.backward() # 递归调用，直至creator为空
     '''
 
-    def backward(self, retain_grad=False):  # 循环实现
+    def backward(self, retain_grad=False, create_graph=False):  # 循环实现
         # 为了省略y.grad = np.array(1.0)
         if self.grad is None:
-            self.grad = np.ones_like(self.data)
+            self.grad = Variable(np.ones_like(self.data))
 
         fs = []
         seen_set = set()  # 记录所有已记录的函数
@@ -115,19 +113,20 @@ class Variable:
         while fs:
             f = fs.pop()  # 去除辈分最大的函数
             gys = [output().grad for output in f.outputs]  # 多输出值, output是弱引用
-            gxs = f.backward(*gys)
-            if not isinstance(gxs, tuple):
-                gxs = (gxs,)  # 单输出值转为tuple
-            for x, gx in zip(f.inputs, gxs):
-                if x.grad is None:
-                    x.grad = gx
-                else:
-                    x.grad += gx
-                if x.creator is not None:
-                    add_func(x.creator)
-            if not retain_grad:
-                for y in f.outputs:
-                    y().grad = None  # 只保留最终结果的导数
+            with using_config('enable_backprop', create_graph): # 高阶导，禁用反向传播[create_graph=True]
+                gxs = f.backward(*gys)
+                if not isinstance(gxs, tuple):
+                    gxs = (gxs,)  # 单输出值转为tuple
+                for x, gx in zip(f.inputs, gxs):
+                    if x.grad is None:
+                        x.grad = gx
+                    else:
+                        x.grad = x.grad + gx # Variable
+                    if x.creator is not None:
+                        add_func(x.creator)
+                if not retain_grad:
+                    for y in f.outputs:
+                        y().grad = None  # 只保留最终结果的导数
 
     def clear_grad(self):
         self.grad = None
@@ -243,7 +242,7 @@ class Mul(Function):
         return x0 * x1
 
     def backward(self, gy):
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs
         gx0 = gy * x1
         gx1 = gy * x0
         return gx0, gx1
@@ -262,7 +261,7 @@ class Div(Function):
         return x0 / x1
 
     def backward(self, gy):
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs
         gx0 = gy / x1
         gx1 = - gy * x0 / (x1 ** 2)
         return gx0, gx1
@@ -295,7 +294,7 @@ class Pow(Function):
         return x ** p
 
     def backward(self, gy):
-        x, p = self.inputs[0].data, self.inputs[1].data
+        x, p = self.inputs
         return p * x ** (p - 1) * gy
 
 

@@ -3,7 +3,7 @@ from DL0 import Variable
 import numpy as np
 
 from DL0.core import numerical_diff
-from DL0.math import square
+from DL0.functions import square
 
 
 class SquareTest(unittest.TestCase):

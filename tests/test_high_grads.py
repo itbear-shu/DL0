@@ -1,7 +1,7 @@
 import unittest
 from DL0 import Variable
 import numpy as np
-import DL0.math as math
+import DL0.functions as math
 
 
 class SquareTest(unittest.TestCase):

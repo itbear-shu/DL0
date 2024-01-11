@@ -102,18 +102,18 @@ class Variable:
         fs = []
         seen_set = set()  # 记录所有已记录的函数
 
-        def add_func(f):
-            if f not in seen_set:
-                fs.append(f)
-                seen_set.add(f)
+        def add_func(func):
+            if func not in seen_set:
+                fs.append(func)
+                seen_set.add(func)
                 fs.sort(key=lambda x: x.generation)  # 函数按辈分从小到大排序
 
         add_func(self.creator)
 
         while fs:
-            f = fs.pop()  # 去除辈分最大的函数
+            f = fs.pop()  # 取出辈分最大的函数
             gys = [output().grad for output in f.outputs]  # 多输出值, output是弱引用
-            with using_config('enable_backprop', create_graph): # 高阶导，禁用反向传播[create_graph=True]
+            with using_config('enable_backprop', create_graph):  # 高阶导，禁用反向传播[create_graph=True]
                 gxs = f.backward(*gys)
                 if not isinstance(gxs, tuple):
                     gxs = (gxs,)  # 单输出值转为tuple
@@ -121,7 +121,7 @@ class Variable:
                     if x.grad is None:
                         x.grad = gx
                     else:
-                        x.grad = x.grad + gx # Variable
+                        x.grad = x.grad + gx  # Variable
                     if x.creator is not None:
                         add_func(x.creator)
                 if not retain_grad:

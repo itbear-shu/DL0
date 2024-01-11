@@ -8,7 +8,7 @@ class Square(Function):
 
     def backward(self, gy):
         # dy = 2 * x
-        x = self.input_.data
+        x = self.inputs[0].data
         gx = 2 * x * gy
         return gx
 
@@ -23,7 +23,7 @@ class Exp(Function):
 
     def backward(self, gy):
         # dy = e^x
-        x = self.input_.data
+        x = self.inputs[0].data
         gx = np.exp(x) * gy
         return gx
 
@@ -31,4 +31,15 @@ def exp(x):
     f = Exp()
     return f(x)
 
+class Add(Function):
+    """y = x0 + x1"""
+    def forward(self, x0, x1):
+        return x0 + x1
 
+    def backward(self, gy):
+        # dx0 = 1, dx1 = 1
+        return 1 * gy, 1 * gy
+
+def add(x0, x1):
+    f = Add()
+    return f(x0, x1)

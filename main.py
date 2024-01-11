@@ -1,9 +1,11 @@
 import numpy as np
 from Variable import Variable
-from functions import square, exp
+from functions import square, exp, add
+from Function import Config
 
 if __name__ == '__main__':
-    x = Variable(np.array(0.5))
-    y = square(exp(square(x)))
-    y.backward()
-    print(x.grad)
+    Config.enable_backprop = False
+    x = Variable(np.ones((100, 100, 100)) * 2)
+    y = square(square(square(x)))
+    # y.backward()
+    print(y.data)

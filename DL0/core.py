@@ -160,15 +160,27 @@ class Variable:
     def __mul__(self, other):
         return mul(self, other)
 
+    def __rmul__(self, other):
+        return mul(other, self)
+
     def __add__(self, other):
         return add(self, other)
+
+    def __radd__(self, other):
+        return add(other, self)
 
     def __sub__(self, other):
         return sub(self, other)
 
+    def __rsub__(self, other):
+        return sub(other, self)
+
     def __truediv__(self, other):
         """真除法"""
         return div(self, other)
+
+    def __rtruediv__(self, other):
+        return div(other, self)
 
 
 class Add(Function):
@@ -183,6 +195,7 @@ class Add(Function):
 
 
 def add(x0, x1):
+    x0 = as_ndarray(x0)
     x1 = as_ndarray(x1)
     return Add()(x0, x1)
 
@@ -198,6 +211,7 @@ class Sub(Function):
 
 
 def sub(x0, x1):
+    x0 = as_ndarray(x0)
     x1 = as_ndarray(x1)
     return Sub()(x0, x1)
 
@@ -216,7 +230,8 @@ class Mul(Function):
 
 
 def mul(x0, x1):
-    x1 = as_variable(x1)
+    x0 = as_ndarray(x0)
+    x1 = as_ndarray(x1)
     return Mul()(x0, x1)
 
 
@@ -243,5 +258,6 @@ class Div(Function):
 
 
 def div(x0, x1):
+    x0 = as_ndarray(x0)
     x1 = as_ndarray(x1)
     return Div()(x0, x1)

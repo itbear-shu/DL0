@@ -1,8 +1,8 @@
 import unittest
-from Variable import Variable
+from DL0 import Variable
 import numpy as np
-from functions import square
-from utils import numerical_diff
+from DL0.functions import square
+from DL0.utils import numerical_diff
 
 class SquareTest(unittest.TestCase):
     def test_forward(self):

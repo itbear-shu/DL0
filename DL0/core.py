@@ -1,5 +1,4 @@
 import numpy as np
-from utils import as_ndarray
 import weakref
 import contextlib
 
@@ -30,8 +29,23 @@ def no_grad():
     return using_config('enable_backprop', False)
 
 
+def as_ndarray(x):
+    """将标量转为一维向量"""
+    if np.isscalar(x):
+        return np.array(x)
+    return x
+
+
+def as_variable(x):
+    if not isinstance(x, Variable):
+        return Variable(x)
+    return x
+
+
 class Function:
     def __call__(self, *inputs):  # inputs: list
+        inputs = [as_variable(input_) for input_ in inputs] # 把其他类型均转为Variable类型
+
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)  # *xs, 对xs进行解包, [x0, x1] ==> x0, x1
         if not isinstance(ys, tuple):  # ys不是tuple，说明返回值只有一个
@@ -169,8 +183,8 @@ class Add(Function):
 
 
 def add(x0, x1):
-    f = Add()
-    return f(x0, x1)
+    x1 = as_ndarray(x1)
+    return Add()(x0, x1)
 
 
 class Sub(Function):
@@ -184,6 +198,7 @@ class Sub(Function):
 
 
 def sub(x0, x1):
+    x1 = as_ndarray(x1)
     return Sub()(x0, x1)
 
 
@@ -201,6 +216,7 @@ class Mul(Function):
 
 
 def mul(x0, x1):
+    x1 = as_variable(x1)
     return Mul()(x0, x1)
 
 
@@ -227,4 +243,5 @@ class Div(Function):
 
 
 def div(x0, x1):
+    x1 = as_ndarray(x1)
     return Div()(x0, x1)

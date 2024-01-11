@@ -44,7 +44,7 @@ def as_variable(x):
 
 class Function:
     def __call__(self, *inputs):  # inputs: list
-        inputs = [as_variable(input_) for input_ in inputs] # 把其他类型均转为Variable类型
+        inputs = [as_variable(input_) for input_ in inputs]  # 把其他类型均转为Variable类型
 
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)  # *xs, 对xs进行解包, [x0, x1] ==> x0, x1
@@ -182,6 +182,26 @@ class Variable:
     def __rtruediv__(self, other):
         return div(other, self)
 
+    def __neg__(self):
+        """负数"""
+        return neg(self)
+
+    def __pow__(self, power, modulo=None):
+        """self ** power"""
+        return pow_(self, power)
+
+    def __abs__(self):
+        return abs_(self)
+
+
+def numerical_diff(f, x, eps=1e-4):
+    """数值微分"""
+    x0 = Variable(as_ndarray(x.data - eps))
+    x1 = Variable(as_ndarray(x.data + eps))
+    y0 = f(x0)
+    y1 = f(x1)
+    return (y1.data - y0.data) / (2 * eps)
+
 
 class Add(Function):
     """y = x0 + x1"""
@@ -207,7 +227,7 @@ class Sub(Function):
         return x0 - x1
 
     def backward(self, gy):
-        return gy, gy
+        return gy, -gy
 
 
 def sub(x0, x1):
@@ -235,15 +255,6 @@ def mul(x0, x1):
     return Mul()(x0, x1)
 
 
-def numerical_diff(f, x, eps=1e-4):
-    """数值微分"""
-    x0 = Variable(as_ndarray(x.data - eps))
-    x1 = Variable(as_ndarray(x.data + eps))
-    y0 = f(x0)
-    y1 = f(x1)
-    return (y1.data - y0.data) / (2 * eps)
-
-
 class Div(Function):
     """ y = x0 / x1"""
 
@@ -261,3 +272,50 @@ def div(x0, x1):
     x0 = as_ndarray(x0)
     x1 = as_ndarray(x1)
     return Div()(x0, x1)
+
+
+class Neg(Function):
+    """y = -x"""
+
+    def forward(self, x):
+        return -x
+
+    def backward(self, gy):
+        return -gy
+
+
+def neg(x):
+    return Neg()(x)
+
+
+class Pow(Function):
+    """y = x ** p"""
+
+    def forward(self, x, p):
+        return x ** p
+
+    def backward(self, gy):
+        x, p = self.inputs[0].data, self.inputs[1].data
+        return p * x ** (p - 1) * gy
+
+
+def pow_(x, p):
+    p = as_ndarray(p)
+    return Pow()(x, p)
+
+
+class Abs(Function):
+    def forward(self, x):
+        return np.abs(x)
+
+    def backward(self, gy):
+        x = self.inputs[0].data
+        yield x.any() == 0
+        if x.all() > 0:
+            return gy
+        else:
+            return -gy
+
+
+def abs_(x):
+    return Abs()(x)

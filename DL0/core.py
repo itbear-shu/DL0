@@ -1,6 +1,7 @@
 import numpy as np
 import weakref
 import contextlib
+import DL0
 
 
 class Config:
@@ -131,6 +132,20 @@ class Variable:
     def clear_grad(self):
         self.grad = None
 
+    def reshape(self, *shape):
+        if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
+            shape = shape[0]
+        return DL0.functions.reshape(self, shape)
+
+    def transpose(self, axes=None):
+        if not isinstance(axes, (tuple, list)):
+            axes = None
+        return DL0.functions.transpose(self, axes)
+
+    @property
+    def T(self):
+        return DL0.functions.transpose(self, None)
+
     @property
     def shape(self):  # shape
         return self.data.shape
@@ -205,12 +220,22 @@ def numerical_diff(f, x, eps=1e-4):
 class Add(Function):
     """y = x0 + x1"""
 
+    def __init__(self):
+        self.x0_shape = None
+        self.x1_shape = None
+
     def forward(self, x0, x1):
+        self.x0_shape = x0.shape
+        self.x1_shape = x1.shape
         return x0 + x1
 
     def backward(self, gy):
         # dx0 = 1, dx1 = 1
-        return 1 * gy, 1 * gy
+        gx0, gx1 = gy, gy
+        if self.x0_shape != self.x1_shape:  # 进行了广播，需要复原
+            gx0 = DL0.functions.sum_to(gx0, self.x0_shape)
+            gx1 = DL0.functions.sum_to(gx1, self.x1_shape)
+        return gx0, gx1
 
 
 def add(x0, x1):
@@ -222,11 +247,21 @@ def add(x0, x1):
 class Sub(Function):
     """y = x0 - x1"""
 
+    def __init__(self):
+        self.x0_shape = None
+        self.x1_shape = None
+
     def forward(self, x0, x1):
+        self.x0_shape = x0.shape
+        self.x1_shape = x1.shape
         return x0 - x1
 
     def backward(self, gy):
-        return gy, -gy
+        gx0, gx1 = gy, -gy
+        if self.x0_shape != self.x1_shape:
+            gx0 = DL0.functions.sum_to(gx0, self.x0_shape)
+            gx1 = DL0.functions.sum_to(gx1, self.x1_shape)
+        return gx0, gx1
 
 
 def sub(x0, x1):
@@ -238,13 +273,22 @@ def sub(x0, x1):
 class Mul(Function):
     """y = x0 * x1"""
 
+    def __init__(self):
+        self.x0_shape = None
+        self.x1_shape = None
+
     def forward(self, x0, x1):
+        self.x0_shape = x0.shape
+        self.x1_shape = x1.shape
         return x0 * x1
 
     def backward(self, gy):
         x0, x1 = self.inputs
         gx0 = gy * x1
         gx1 = gy * x0
+        if self.x0_shape != self.x1_shape:
+            gx0 = DL0.functions.sum_to(gx0, self.x0_shape)
+            gx1 = DL0.functions.sum_to(gx1, self.x1_shape)
         return gx0, gx1
 
 
@@ -257,13 +301,22 @@ def mul(x0, x1):
 class Div(Function):
     """ y = x0 / x1"""
 
+    def __init__(self):
+        self.x0_shape = None
+        self.x1_shape = None
+
     def forward(self, x0, x1):
+        self.x0_shape = x0.shape
+        self.x1_shape = x1.shape
         return x0 / x1
 
     def backward(self, gy):
         x0, x1 = self.inputs
         gx0 = gy / x1
         gx1 = - gy * x0 / (x1 ** 2)
+        if self.x0_shape != self.x1_shape:
+            gx0 = DL0.functions.sum_to(gx0, self.x0_shape)
+            gx1 = DL0.functions.sum_to(gx1, self.x1_shape)
         return gx0, gx1
 
 

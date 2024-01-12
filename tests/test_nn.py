@@ -1,7 +1,6 @@
 import numpy as np
 from DL0.core import Variable
 import DL0.functions as F
-from DL0.utils import mean_squared_error
 import unittest
 
 

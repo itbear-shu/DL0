@@ -226,7 +226,7 @@ class Linear(Function):
         X, W, b = self.inputs
         gx = matmul(gy, W.T)
         gw = matmul(X.T, gy)
-        gb = None if b is None else sum_to(gy, b.shape)
+        gb = None if b.data is None else sum_to(gy, b.shape)
         return gx, gw, gb
 
 

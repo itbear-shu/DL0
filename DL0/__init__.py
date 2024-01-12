@@ -3,5 +3,5 @@ from DL0.core import Function
 from DL0.core import no_grad
 from DL0.core import as_ndarray
 from DL0.core import as_variable
-from DL0.core import Parameter
+from DL0.layers import Parameter
 import DL0.functions

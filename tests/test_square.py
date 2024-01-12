@@ -4,6 +4,7 @@ import numpy as np
 
 from DL0.core import numerical_diff
 from DL0.functions import square
+import DL0.functions as F
 
 
 class SquareTest(unittest.TestCase):
@@ -15,8 +16,9 @@ class SquareTest(unittest.TestCase):
 
     def test_backward(self):
         x = Variable(np.array(3.))
-        y = square(x)
+        y = F.exp(x)
         y.backward()
+        print(y)
         expected = np.array(6.)
         self.assertEqual(x.grad.data, expected)
 

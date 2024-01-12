@@ -213,6 +213,10 @@ class Variable:
         return abs_(self)
 
 
+class Parameter(Variable):
+    pass
+
+
 def numerical_diff(f, x, eps=1e-4):
     """数值微分"""
     x0 = Variable(as_ndarray(x.data - eps))

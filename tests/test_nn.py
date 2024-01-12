@@ -90,3 +90,42 @@ class TestNN(unittest.TestCase):
             print(f'epoch {i + 1}: loss = {loss.data}')
             print(f'W = {W.data}')
             print(f'b = {b.data}')
+
+    def test_sin(self):
+        # 生成数据
+        X = Variable(np.random.randn(1000, 4)) + 10
+        y = F.sin(X)
+
+        epochs = 1000
+        lr = 1e-2
+
+        # 初始化参数
+        W1 = Variable(np.random.randn(4, 2))
+        b1 = Variable(np.random.randn(1))
+        W2 = Variable(np.random.randn(2, 4))
+        b2 = Variable(np.random.randn(1))
+
+        def net(X):
+            A = F.linear(X, W1, b1)
+            B = F.sigmoid(A)
+            C = F.linear(B, W2, b2)
+            return C
+
+        for i in range(epochs):
+            y_hat = net(X)
+            loss = F.mean_squared_error(y, y_hat)
+            W1.clear_grad()
+            W2.clear_grad()
+            b1.clear_grad()
+            W2.clear_grad()
+            loss.backward()
+            W1.data -= W1.grad.data * lr
+            W2.data -= W2.grad.data * lr
+            b1.data -= b1.grad.data * lr
+            b2.data -= b2.grad.data * lr
+
+            print(f'epoch {i + 1}: loss = {loss.data}')
+        print(f'W1 = {W1.data}')
+        print(f'b1 = {b1.data}')
+        print(f'W2 = {W2.data}')
+        print(f'b2 = {b2.data}')

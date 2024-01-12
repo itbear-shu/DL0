@@ -198,6 +198,23 @@ def matmul(X, W):
     return MatMul()(X, W)
 
 
+class Sigmoid(Function):
+    """y = 1 / (1 + e^-x)"""
+
+    def forward(self, x):
+        eps = 1e-5
+        return 1 / (1 + np.exp(-x) + eps)
+
+    def backward(self, gy):
+        y = self.outputs[0]()
+        gx = gy * y * (1 - y)
+        return gx
+
+
+def sigmoid(x):
+    return Sigmoid()(x)
+
+
 class Linear(Function):
     def forward(self, X, W, b=None):
         t = np.dot(X, W)

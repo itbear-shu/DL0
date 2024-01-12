@@ -16,7 +16,7 @@ class TwoLayerModel(Model):
 
 
 class MLP(Model):
-    def __init__(self, sizes, activation=F.sigmoid):
+    def __init__(self, *sizes, activation=F.sigmoid):
         super().__init__()
         self.activation = activation
         self.layers = []

@@ -3,7 +3,7 @@ import numpy as np
 from DL0.core import Variable
 import DL0.functions as F
 from DL0.models import MLP
-from DL0.optimizers import SGD
+from DL0.optimizers import SGD, Adam
 
 
 class TestOptimizers(unittest.TestCase):
@@ -12,8 +12,8 @@ class TestOptimizers(unittest.TestCase):
         y = F.cos(X)
 
         model = MLP(6, 5)
-        lr = 1e-2
-        optimizer = SGD(lr).setup(model)
+        lr = 1e-1
+        optimizer = Adam(lr).setup(model)
         epochs = 10
 
         for i in range(epochs):
@@ -24,5 +24,3 @@ class TestOptimizers(unittest.TestCase):
             optimizer.update()
 
             print(i + 1, loss.data)
-
-

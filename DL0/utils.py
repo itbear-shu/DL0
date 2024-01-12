@@ -1,3 +1,6 @@
+import DL0.functions as F
+
+
 def utils_test():
     print("Hello, DL0!")
 
@@ -53,3 +56,7 @@ def sum_to(x, shape):
     if lead > 0:
         y = y.squeeze(lead_axis)
     return y
+
+
+def mean_squared_error(y, y_hat):
+    return F.sum((y - y_hat) ** 2) / len(y)

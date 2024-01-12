@@ -181,3 +181,55 @@ def sum_to(x, shape):
     if x.shape == shape:
         return as_variable(x)
     return SumTo(shape)(x)
+
+
+class MatMul(Function):
+    def forward(self, X, W):
+        return np.dot(X, W)
+
+    def backward(self, gy):
+        X, W = self.inputs
+        gx = matmul(gy, W.T)
+        gw = matmul(X.T, gy)
+        return gx, gw
+
+
+def matmul(X, W):
+    return MatMul()(X, W)
+
+
+class Linear(Function):
+    def forward(self, X, W, b=None):
+        t = np.dot(X, W)
+        if b is None:
+            return t
+        return t + b
+
+    def backward(self, gy):
+        X, W, b = self.inputs
+        gx = matmul(gy, W.T)
+        gw = matmul(X.T, gy)
+        gb = None if b is None else sum_to(gy, b.shape)
+        return gx, gw, gb
+
+
+def linear(X, W, b):
+    return Linear()(X, W, b)
+
+
+class MSE(Function):
+    """Mean Squared Error: 均方差"""
+
+    def forward(self, y, y_hat):
+        diff = y - y_hat
+        return np.sum(diff ** 2) / len(y)
+
+    def backward(self, gy):
+        y, y_hat = self.inputs
+        gx0 = gy * 2. * (y - y_hat) / len(y)
+        gx1 = -gx0
+        return gx0, gx1
+
+
+def mean_squared_error(y, y_hat):
+    return MSE()(y, y_hat)

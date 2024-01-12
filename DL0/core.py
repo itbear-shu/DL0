@@ -63,9 +63,11 @@ class Function:
         return outputs if len(outputs) > 1 else outputs[0]  # 返回一个或多个
 
     def forward(self, *xs):  # forward()接口
+        """np.ndarray"""
         raise NotImplementedError()
 
     def backward(self, *gys):  # backward()接口
+        """Variable"""
         raise NotImplementedError()
 
 
@@ -131,6 +133,9 @@ class Variable:
 
     def clear_grad(self):
         self.grad = None
+
+    def matmul(self, other):
+        return DL0.functions.matmul(self, other)
 
     def reshape(self, *shape):
         if len(shape) == 1 and isinstance(shape[0], (tuple, list)):

@@ -1,6 +1,7 @@
 import numpy as np
 from DL0.core import Variable
 import DL0.functions as F
+from DL0.utils import mean_squared_error
 import unittest
 
 
@@ -53,3 +54,39 @@ class TestNN(unittest.TestCase):
         print(z)
         print(x.grad)
         print(y.grad)
+
+    def test_matmul(self):
+        X = Variable(np.arange(12).reshape(3, 4))
+        W = Variable(np.arange(16).reshape(4, 4))
+        y = X.matmul(W)
+        y.backward()
+        print(X.shape)
+        print(W.shape)
+
+    def test_linear(self):
+        # 生成数据
+        X = Variable(np.random.rand(100, 4))
+        true_W = Variable(np.arange(1, 9).reshape(4, 2))
+        true_b = Variable(np.random.rand(1))
+        y = F.linear(X, true_W, true_b)
+        print('true_W = ', true_W.data)
+        print('true_b = ', true_b.data)
+        # 初始化参数
+        W = Variable(np.random.randn(4, 2))
+        b = Variable(np.random.randn(1))
+        epochs = 1000
+        lr = 1e-2
+
+        for i in range(epochs):
+            W.clear_grad()
+            b.clear_grad()
+            y_hat = F.linear(X, W, b)
+
+            loss = F.mean_squared_error(y, y_hat)
+            loss.backward()
+
+            W.data -= lr * W.grad.data
+            b.data -= lr * b.grad.data
+            print(f'epoch {i + 1}: loss = {loss.data}')
+            print(f'W = {W.data}')
+            print(f'b = {b.data}')

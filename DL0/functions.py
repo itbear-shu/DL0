@@ -318,10 +318,12 @@ class SoftmaxCrossEntropy(Function):
         self.axis = 0
         self.eps = 1e-9
         self.y_hat = None
+        self.y = None
 
     def forward(self, x, y):
         if y.ndim <= 1:
             y = np.eye(x.shape[1], dtype=y.dtype)[y.data]
+            self.y = y
         exp_x = np.exp(x - x.max(axis=self.axis, keepdims=True))
         if exp_x.ndim > 1:
             self.axis = 1
@@ -330,8 +332,7 @@ class SoftmaxCrossEntropy(Function):
         return -np.sum(y * np.log(y_hat + self.eps)) / len(y)
 
     def backward(self, gy):
-        y = self.inputs[1]
-        return gy * (self.y_hat - y) / len(y)
+        return gy * (self.y_hat - self.y) / len(self.y)
 
 
 def softmax_cross_entropy_error(x, y):

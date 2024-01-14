@@ -227,16 +227,33 @@ def sigmoid(x):
     return Sigmoid()(x)
 
 
+class ReLU(Function):
+    def __init__(self):
+        self.eps = 1e-9
+
+    def forward(self, x):
+        return np.maximum(x, 0.) + self.eps
+
+    def backward(self, gy):
+        x = self.inputs[0]
+        return gy * (x.data > 0) + self.eps
+
+
+def relu(x):
+    return ReLU()(x)
+
+
 class Softmax(Function):
     def __init__(self):
         self.axis = 0
+        self.eps = 1e-9
 
     def forward(self, x):
         y = x - x.max(axis=self.axis, keepdims=True)
         exp_x = np.exp(y)
         if exp_x.ndim > 1:
             self.axis = 1
-        return exp_x / np.sum(exp_x, axis=self.axis, keepdims=True)
+        return exp_x / (np.sum(exp_x, axis=self.axis, keepdims=True) + self.eps)
 
     def backward(self, gy):
         y = self.outputs[0]()
@@ -327,7 +344,7 @@ class SoftmaxCrossEntropy(Function):
         exp_x = np.exp(x - x.max(axis=self.axis, keepdims=True))
         if exp_x.ndim > 1:
             self.axis = 1
-        y_hat = exp_x / np.sum(exp_x, axis=self.axis, keepdims=True)
+        y_hat = exp_x / (np.sum(exp_x, axis=self.axis, keepdims=True) + self.eps)
         self.y_hat = as_variable(y_hat)
         return -np.sum(y * np.log(y_hat + self.eps)) / len(y)
 

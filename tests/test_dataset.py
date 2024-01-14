@@ -6,6 +6,8 @@ from DL0.core import Variable
 import DL0.functions as F
 from DL0.models import MLP
 from DL0.optimizers import SGD
+from DL0 import DataLoader
+
 import DL0.datasets
 
 
@@ -28,7 +30,8 @@ class TestDataset(unittest.TestCase):
         hidden_size = 10
         lr = 0.1
 
-        transforms = DL0.transforms.Compose([DL0.transforms.AsType(np.float64), DL0.transforms.Normalize(mean=1, std=2)])
+        transforms = DL0.transforms.Compose(
+            [DL0.transforms.AsType(np.float64), DL0.transforms.Normalize(mean=1, std=2)])
         # train_set = DL0.datasets.Spiral(transform=DL0.transforms.Normalize())
         train_set = DL0.datasets.Spiral(transform=transforms)
         model = MLP(hidden_size, 3)
@@ -56,4 +59,33 @@ class TestDataset(unittest.TestCase):
 
                 sum_loss += float(loss.data) * len(batch_index)
 
-            print(f'epoch: {epoch + 1}, avg_loss = {sum_loss/data_size}')
+            print(f'epoch: {epoch + 1}, avg_loss = {sum_loss / data_size}')
+
+    def test2(self):
+        epochs = 300
+        batch_size = 30
+        hidden_size = 10
+        lr = 0.1
+
+        transforms = DL0.transforms.Compose(
+            [DL0.transforms.AsType(np.float64), DL0.transforms.Normalize(mean=1, std=2)])
+        # train_set = DL0.datasets.Spiral(transform=DL0.transforms.Normalize())
+        train_set = DL0.datasets.Spiral(transform=transforms)
+        train_loader = DataLoader(train_set, batch_size)
+        model = MLP(hidden_size, 3)
+        optimizer = SGD(lr).setup(model)
+
+        data_size = len(train_set)
+
+        for epoch in range(epochs):
+            sum_loss = 0.
+
+            for x, y in train_loader:
+                loss = F.softmax_cross_entropy_error(model(x), y)
+                model.clear_grads()
+                loss.backward()
+                optimizer.update()
+
+                sum_loss += float(loss.data) * len(x)
+
+            print(f'epoch: {epoch + 1}, avg_loss = {sum_loss / data_size}')

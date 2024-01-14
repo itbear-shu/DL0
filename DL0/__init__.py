@@ -7,3 +7,5 @@ from DL0.layers import Parameter
 import DL0.functions
 import DL0.datasets
 import DL0.transforms
+import DL0.dataloader
+from DL0.dataloader import DataLoader

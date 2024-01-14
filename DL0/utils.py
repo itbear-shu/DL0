@@ -1,3 +1,4 @@
+import DL0
 import DL0.functions as F
 import numpy as np
 
@@ -65,10 +66,10 @@ def mean_squared_error(y, y_hat):
 
 def get_spiral(train=True):
     """螺旋数据集"""
-    seed = 1984 if train else 2020
+    seed = 2023 if train else 2024
     np.random.seed(seed=seed)
 
-    num_data, num_class, input_dim = 100, 3, 2
+    num_data, num_class, input_dim = 100, 9, 2
     data_size = num_class * num_data
     x = np.zeros((data_size, input_dim), dtype=np.float32)
     t = np.zeros(data_size, dtype=np.int32)
@@ -87,3 +88,16 @@ def get_spiral(train=True):
     x = x[indices]
     t = t[indices]
     return x, t
+
+
+def accuracy(y, y_hat):
+    """
+        计算分类问题的准确率
+        y: m * 1
+        y_hat: m * n
+    """
+    y, y_hat = DL0.as_variable(y), DL0.as_variable(y_hat)
+    pred = y_hat.data.argmax(axis=1).reshape(y.shape)
+    res = (y.data == pred)
+    acc = res.mean()
+    return DL0.Variable(np.array(acc))

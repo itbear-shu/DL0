@@ -227,6 +227,29 @@ def sigmoid(x):
     return Sigmoid()(x)
 
 
+class Softmax(Function):
+    def __init__(self):
+        self.axis = 0
+
+    def forward(self, x):
+        y = x - x.max(axis=self.axis, keepdims=True)
+        exp_x = np.exp(y)
+        if exp_x.ndim > 1:
+            self.axis = 1
+        return exp_x / np.sum(exp_x, axis=self.axis, keepdims=True)
+
+    def backward(self, gy):
+        y = self.outputs[0]()
+        gx = y * gy
+        sum_dx = gx.sum(axis=self.axis, keepdims=True)
+        gx -= y * sum_dx
+        return gx
+
+
+def softmax(x):
+    return Softmax()(x)
+
+
 class Linear(Function):
     def forward(self, X, W, b=None):
         t = np.dot(X, W)

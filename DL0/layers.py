@@ -66,6 +66,8 @@ class Linear(Layer):
 
     def forward(self, inputs):
         if self.W.data is None:
+            if inputs.ndim <= 1:  # 处理标量和一维向量
+                inputs = inputs.reshape(1, -1)
             self.in_size = inputs.shape[1]
             self.init_W()
         return F.linear(inputs, self.W, self.b)

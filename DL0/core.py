@@ -48,10 +48,10 @@ class Function:
         inputs = [as_variable(input_) for input_ in inputs]  # 把其他类型均转为Variable类型
 
         xs = [x.data for x in inputs]
-        ys = self.forward(*xs)  # *xs, 对xs进行解包, [x0, x1] ==> x0, x1
+        ys = self.forward(*xs)  # *xs, 对xs进行解包, [x0, x1] ==> x0, x1  (np.array)
         if not isinstance(ys, tuple):  # ys不是tuple，说明返回值只有一个
             ys = (ys,)
-        outputs = [Variable(as_ndarray(y)) for y in ys]  # 将y转为向量
+        outputs = [Variable(as_ndarray(y)) for y in ys]  # 将y转为向量 (Variable)
 
         if Config.enable_backprop:  # 需要进行反向传播
             self.generation = max([x.generation for x in inputs])  # 函数的辈分等于输入的辈分中的最大值
@@ -98,6 +98,10 @@ class Variable:
     '''
 
     def backward(self, retain_grad=False, create_graph=False):  # 循环实现
+        """
+            retain_grad: 是否保存中间变量的grad
+            create_graph: 是否在反向传播时创建计算图，方便求高阶导数
+        """
         # 为了省略y.grad = np.array(1.0)
         if self.grad is None:
             self.grad = Variable(np.ones_like(self.data))
@@ -109,14 +113,14 @@ class Variable:
             if func not in seen_set:
                 fs.append(func)
                 seen_set.add(func)
-                fs.sort(key=lambda x: x.generation)  # 函数按辈分从小到大排序
+                fs.sort(key=lambda w: w.generation)  # 函数按辈分从小到大排序
 
         add_func(self.creator)
 
         while fs:
             f = fs.pop()  # 取出辈分最大的函数
             gys = [output().grad for output in f.outputs]  # 多输出值, output是弱引用
-            with using_config('enable_backprop', create_graph):  # 高阶导，禁用反向传播[create_graph=True]
+            with using_config('enable_backprop', create_graph):  # 高阶导，启用反向传播[create_graph=True]
                 gxs = f.backward(*gys)
                 if not isinstance(gxs, tuple):
                     gxs = (gxs,)  # 单输出值转为tuple
@@ -128,8 +132,8 @@ class Variable:
                     if x.creator is not None:
                         add_func(x.creator)
                 if not retain_grad:
-                    for y in f.outputs:
-                        y().grad = None  # 只保留最终结果的导数
+                    for output in f.outputs:
+                        output().grad = None  # 只保留最终结果的导数
 
     def clear_grad(self):
         self.grad = None
@@ -146,6 +150,9 @@ class Variable:
         if not isinstance(axes, (tuple, list)):
             axes = None
         return DL0.functions.transpose(self, axes)
+
+    def sum(self, axis=None, keepdims=False):
+        return DL0.functions.sum(self, axis, keepdims)
 
     @property
     def T(self):

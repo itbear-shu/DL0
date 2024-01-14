@@ -1,4 +1,4 @@
-from DL0.core import Function, as_variable
+from DL0.core import Function, as_variable, as_ndarray
 import numpy as np
 import DL0.utils as utils
 
@@ -250,6 +250,10 @@ def softmax(x):
     return Softmax()(x)
 
 
+########################################################
+# 线性函数
+########################################################
+
 class Linear(Function):
     def forward(self, X, W, b=None):
         t = np.dot(X, W)
@@ -265,16 +269,14 @@ class Linear(Function):
         return gx, gw, gb
 
 
-########################################################
-# 线性函数
-########################################################
-
 def linear(X, W, b):
     return Linear()(X, W, b)
 
 
 ########################################################
 # 损失函数
+# y：真实label
+# y_hat：预测值
 ########################################################
 
 class MSE(Function):
@@ -293,3 +295,19 @@ class MSE(Function):
 
 def mean_squared_error(y, y_hat):
     return MSE()(y, y_hat)
+
+
+class CrossEntropy(Function):
+    def __init__(self):
+        self.eps = 1e-9
+
+    def forward(self, y, y_hat):
+        return -np.sum(y * np.log(y_hat + self.eps)) / len(y)
+
+    def backward(self, gy):
+        y, y_hat = self.inputs
+        return - gy * y / (y_hat + self.eps) / len(y)
+
+
+def cross_entropy_error(y, y_hat):
+    return CrossEntropy()(y, y_hat)

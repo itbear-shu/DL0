@@ -110,7 +110,8 @@ class TestDataset(unittest.TestCase):
         test_set = DL0.datasets.Spiral(train=False)
         train_loader = DataLoader(train_set, batch_size)
         test_loader = DataLoader(test_set, batch_size, shuffle=False)
-        model = MLP(*hidden_size, 9)
+        model = MLP(*hidden_size, 9, activation=F.sigmoid)
+        # model = MLP(*hidden_size, 9, activation=F.relu)
         # optimizer = SGD(lr).setup(model)
         optimizer = Adam().setup(model)
 

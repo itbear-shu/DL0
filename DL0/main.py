@@ -2,6 +2,7 @@ import numpy as np
 from DL0.core import Variable
 import DL0.functions as F
 
+
 def rosenrock(x0, x1):
     return x0 + x1
 

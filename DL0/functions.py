@@ -340,7 +340,7 @@ class SoftmaxCrossEntropy(Function):
     def forward(self, x, y):
         if y.ndim <= 1:
             y = np.eye(x.shape[1], dtype=y.dtype)[y.data]
-            self.y = y
+        self.y = y
         exp_x = np.exp(x - x.max(axis=self.axis, keepdims=True))
         if exp_x.ndim > 1:
             self.axis = 1

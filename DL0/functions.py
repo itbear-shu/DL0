@@ -151,6 +151,24 @@ def sum(x, axis=None, keepdims=False):
     return Sum(axis, keepdims)(x)
 
 
+class Squeeze(Function):
+    def __init__(self, axis):
+        self.axis = axis
+        self.x_shape = None
+
+    def forward(self, x):
+        self.x_shape = x.shape
+        return np.squeeze(x, axis=self.axis)
+
+    def backward(self, gy):
+        x, = self.inputs
+        return gy * x.reshape(self.x_shape)
+
+
+def squeeze(x, axis):
+    return Squeeze(axis)(x)
+
+
 class BroadcastTO(Function):
     def __init__(self, shape):
         self.target_shape = shape
@@ -354,3 +372,22 @@ class SoftmaxCrossEntropy(Function):
 
 def softmax_cross_entropy_error(x, y):
     return SoftmaxCrossEntropy()(x, y)
+
+
+########################################################
+# NLP
+########################################################
+class Embedding(Function):
+    def forward(self, W, idx):
+        return W[idx]
+
+    def backward(self, gy):
+        W, idx = self.inputs
+        # for i, word_id in enumerate(idx.data):
+        #     W.data[word_id] += gy.data[i]
+        np.add.at(W.data, idx.data, gy.data)
+        return W
+
+
+def embedding(W, idx):
+    return Embedding()(W, idx)

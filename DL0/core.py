@@ -154,6 +154,9 @@ class Variable:
     def sum(self, axis=None, keepdims=False):
         return DL0.functions.sum(self, axis, keepdims)
 
+    def squeeze(self, axis=None):
+        return DL0.functions.squeeze(self, axis)
+
     @property
     def T(self):
         return DL0.functions.transpose(self, None)

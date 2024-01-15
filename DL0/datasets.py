@@ -36,6 +36,11 @@ class Spiral(Dataset):
 
 
 class CBOWDataset(Dataset):
+    def __init__(self, train=True, transform=None, target_transform=None, to_onehot=False):
+        self.to_onehot = to_onehot
+        self.vocab_size = None
+        super().__init__(train=train, transform=transform, target_transform=target_transform)
+
     def prepare(self):
         if self.train:
             path = os.path.dirname(__file__) + '/data/cbow/train.txt'
@@ -49,5 +54,8 @@ class CBOWDataset(Dataset):
         corpus, word_to_id, id_to_word = utils.preprocess(text)
         contexts, target = utils.create_contexts_target(corpus)
         self.vocab_size = len(word_to_id)
-        self.data, self.label = utils.convert_to_onehot(contexts, self.vocab_size), \
-                                utils.convert_to_onehot(target, self.vocab_size)
+        if not self.to_onehot:
+            self.data, self.label = contexts, utils.convert_to_onehot(target, self.vocab_size)
+        else:
+            self.data, self.label = utils.convert_to_onehot(contexts, self.vocab_size), \
+                                    utils.convert_to_onehot(target, self.vocab_size)

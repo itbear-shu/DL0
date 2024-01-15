@@ -2,7 +2,8 @@ import numpy as np
 import weakref
 import DL0.functions as F
 
-from DL0.core import Variable
+from DL0.core import Variable, as_variable
+import DL0.utils as utils
 
 
 class Parameter(Variable):
@@ -83,3 +84,45 @@ class TwoLayersNet(Layer):
         y1 = self.layer1(inputs)
         y2 = F.sigmoid(y1)
         return self.layer2(y2)
+
+
+class CBOW(Layer):
+    def __init__(self, in_size, hidden_size, out_size, dtype=np.float32, onehot=False):
+        super().__init__()
+        self.in_size = in_size
+        self.hidden_size = hidden_size
+        self.out_size = out_size
+        self.dtype = dtype
+        self.onehot = onehot
+
+        # 初始化参数
+        self.W_in = Variable(
+            np.random.randn(self.in_size, self.hidden_size).astype(self.dtype) * np.sqrt(1 / self.in_size))
+
+        if not self.onehot:
+            self.embedding = Embedding(self.W_in)
+        else:
+            self.embedding = None
+
+        self.W_out = Variable(
+            np.random.randn(self.hidden_size, self.out_size).astype(self.dtype) * np.sqrt(1 / self.hidden_size))
+
+    def forward(self, inputs):
+        if self.embedding is None:
+            A1 = F.matmul(inputs[0][0].reshape(1, -1), self.W_in)
+            A2 = F.matmul(inputs[0][1].reshape(1, -1), self.W_in)
+            B = (A1 + A2) / 2
+        else:
+            A = self.embedding(inputs).sum(axis=1)
+            B = A / 2
+        y = F.matmul(B, self.W_out)
+        return y
+
+
+class Embedding(Layer):
+    def __init__(self, W):
+        super().__init__()
+        self.W = W
+
+    def forward(self, idx):
+        return F.embedding(self.W, idx)

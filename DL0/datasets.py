@@ -1,5 +1,6 @@
 import numpy as np
 import DL0.utils as utils
+import os
 
 
 class Dataset:
@@ -32,3 +33,21 @@ class Dataset:
 class Spiral(Dataset):
     def prepare(self):
         self.data, self.label = utils.get_spiral(self.train)
+
+
+class CBOWDataset(Dataset):
+    def prepare(self):
+        if self.train:
+            path = os.path.dirname(__file__) + '/data/cbow/train.txt'
+        else:
+            path = os.path.dirname(__file__) + '/data/cbow/test.txt'
+        text = ''
+        with open(path, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                text += line
+        corpus, word_to_id, id_to_word = utils.preprocess(text)
+        contexts, target = utils.create_contexts_target(corpus)
+        self.vocab_size = len(word_to_id)
+        self.data, self.label = utils.convert_to_onehot(contexts, self.vocab_size), \
+                                utils.convert_to_onehot(target, self.vocab_size)

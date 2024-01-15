@@ -174,6 +174,9 @@ class Variable:
     def size(self):  # 元素总数
         return self.data.dtype
 
+    def __getitem__(self, item):
+        return as_variable(self.data[item])
+
     def __len__(self):
         return len(self.data)
 
